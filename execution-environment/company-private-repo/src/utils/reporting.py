@@ -7,7 +7,7 @@ import io
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from models.core import Sprint, Status, Task, User
+from models.core import Sprint, Status, User
 from models.store import DataStore
 
 

@@ -339,6 +339,9 @@ class TaskService:
     def get_workload_report(self, project_id: str) -> list[dict[str, Any]]:
         tasks = self._store.list_tasks(project_id=project_id)
         users = self._store.list_users(active_only=True)
+
+        # Build a map for fast user lookup
+        user_map = {u.id: u for u in users}
         report: list[dict[str, Any]] = []
 
         for user in users:
