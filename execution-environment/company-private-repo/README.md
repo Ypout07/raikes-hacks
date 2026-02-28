@@ -1,11 +1,11 @@
-# TaskFlow
+# TaskFlow - Private Company Repo
 
 A Python project management backend system for teams working with sprints, tasks, and project analytics.
 
 ## Structure
 
 ```
-taskflow/
+company-private-repo/
 ├── api/
 │   └── app.py              # High-level API facade (main entry point)
 ├── models/
@@ -19,7 +19,7 @@ taskflow/
 │   ├── helpers.py          # String, date, and validation utilities
 │   └── reporting.py        # CSV/text report generation
 ├── tests/
-│   └── test_taskflow.py    # Unit and integration tests
+│   └── test.py             # Unit and integration tests
 └── seed.py                 # Demo data generator
 ```
 
@@ -31,13 +31,13 @@ taskflow/
 cd taskflow
 python -m pytest tests/ -v
 # or
-python tests/test_taskflow.py
+python tests/test.py
 ```
 
 ### Generate demo data
 
 ```bash
-cd taskflow
+cd company-private-repo
 python seed.py
 ```
 

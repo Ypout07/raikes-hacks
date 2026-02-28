@@ -1,0 +1,5 @@
+{
+  "pythonVersion": "3.13",
+  "typeCheckingMode": "strict",
+  "extraPaths": ["src"],
+}
