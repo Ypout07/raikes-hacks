@@ -32,7 +32,6 @@ cli/orchestrator.exe
 go.work
 go.work.sum
 
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -52,3 +51,5 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+./execution-environment/company-private-repo/demo_data.json
