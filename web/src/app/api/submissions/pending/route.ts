@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+// Disable Vercel caching
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const { data: job, error } = await supabase
     .from("submissions")
@@ -13,9 +16,14 @@ export async function GET() {
   if (error || !job) {
     return NextResponse.json(
       { message: "No pending submissions" },
-      { status: 404 }
+      { status: 404 },
     );
   }
+
+  await supabase
+    .from("submissions")
+    .update({ status: "processing" })
+    .eq("id", job.id);
 
   return NextResponse.json({
     submission_id: job.id,
