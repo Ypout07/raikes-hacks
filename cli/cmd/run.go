@@ -21,9 +21,7 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Pulls a specific pending agent and executes the evaluation loop",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("=====================================================")
-		fmt.Printf("INITIALIZING SINGLE RUN FOR PROBLEM: %s\n", runProblemID)
-		fmt.Println("=====================================================")
+		fmt.Printf("Single run beginning for: %s\n", runProblemID)
 
 		job, err := api.FetchPendingJob(runProblemID)
 		if err != nil {
@@ -34,7 +32,7 @@ var runCmd = &cobra.Command{
 		startTime := time.Now()
 		agentFailed := false
 
-		err = orchestrator.RunAgent(job.DockerImageTag, runRepoPath)
+		err = orchestrator.RunAgent(job.DockerImageTag, runRepoPath, job.APIKey)
 		if err != nil {
 			fmt.Printf("Agent Execution Failed/Timed Out: %v\n", err)
 			agentFailed = true
@@ -63,9 +61,7 @@ var runCmd = &cobra.Command{
 		// Enterprise cleanup for the single run as well
 		_ = evaluator.RevertWorkspace(runRepoPath)
 
-		fmt.Println("=====================================================")
-		fmt.Println("EXECUTION COMPLETE.")
-		fmt.Println("=====================================================")
+		fmt.Println("Execution complete.")
 	},
 }
 

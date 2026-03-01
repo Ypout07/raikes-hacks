@@ -18,9 +18,7 @@ var batchCmd = &cobra.Command{
 	Use:   "batch",
 	Short: "Executes all pending submissions in the queue and terminates",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("=====================================================")
-		fmt.Println("INITIATING BATCH EVALUATION...")
-		fmt.Println("=====================================================")
+		fmt.Println("Starting batch eval.")
 
 		processedCount := 0
 
@@ -40,7 +38,7 @@ var batchCmd = &cobra.Command{
 			startTime := time.Now()
 			agentFailed := false
 
-			err = orchestrator.RunAgent(job.DockerImageTag, batchRepoPath)
+			err = orchestrator.RunAgent(job.DockerImageTag, batchRepoPath, job.APIKey)
 			if err != nil {
 				fmt.Printf("Agent Execution Failed/Timed Out: %v\n", err)
 				agentFailed = true
@@ -52,7 +50,7 @@ var batchCmd = &cobra.Command{
 			var tokensUsed int
 
 			if agentFailed {
-				fmt.Println("[*] Skipping local test suite due to agent failure.")
+				fmt.Println("Skipping tests due to agent failure.")
 				passedTests = false
 				tokensUsed = 0
 			} else {
@@ -74,9 +72,7 @@ var batchCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Println("=====================================================")
-		fmt.Printf("BATCH EVALUATION TERMINATED. %d SUBMISSIONS PROCESSED.\n", processedCount)
-		fmt.Println("=====================================================")
+		fmt.Printf("Batch eval terminated. %d submissions processed.\n", processedCount)
 	},
 }
 

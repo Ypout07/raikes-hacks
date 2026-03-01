@@ -14,8 +14,12 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// RunAgent pulls the student's image, mounts the local private repo, and executes it.
-func RunAgent(imageTag string, localRepoPath string) error {
+// RunAgent pulls the student's image, mounts the local private repo, injects secrets, and executes it.
+func RunAgent(imageTag string, localRepoPath string, apiKey string) error {
+	if apiKey == "" {
+		return fmt.Errorf("API did not provide a GEMINI_API_KEY in the payload")
+	}
+
 	// Initialize the Docker client using environment variables (standard configuration)
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -26,7 +30,7 @@ func RunAgent(imageTag string, localRepoPath string) error {
 	// Create a base context
 	ctx := context.Background()
 
-	fmt.Printf("[Pulling image %s from Docker Hub.\n", imageTag)
+	fmt.Printf("Pulling image %s from Docker Hub.\n", imageTag)
 	reader, err := cli.ImagePull(ctx, imageTag, image.PullOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to pull image: %w", err)
@@ -41,7 +45,7 @@ func RunAgent(imageTag string, localRepoPath string) error {
 		return fmt.Errorf("failed to resolve absolute path for volume mount: %w", err)
 	}
 
-	// config
+	// hostConfig (Volume mounts and resource limits)
 	hostConfig := &container.HostConfig{
 		Mounts: []mount.Mount{
 			{
@@ -51,25 +55,30 @@ func RunAgent(imageTag string, localRepoPath string) error {
 			},
 		},
 		Resources: container.Resources{
-			Memory: 1024 * 1024 * 1024, // 1g
+			Memory: 1024 * 1024 * 1024, // 1GB limit
 		},
 	}
 
 	fmt.Println("Creating container.")
+
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: imageTag,
 		Tty:   false,
+		Env: []string{
+			fmt.Sprintf("GEMINI_API_KEY=%s", apiKey),
+		},
 	}, hostConfig, nil, nil, "")
+
 	if err != nil {
 		return fmt.Errorf("failed to create container: %w", err)
 	}
 
-	fmt.Println("Starting AI Agent.")
+	fmt.Println("Starting AI Agent execution sequence.")
 	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		return fmt.Errorf("failed to start container: %w", err)
 	}
 
-	// agent has 3 mins!
+	// agent has exactly 3 minutes
 	timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
 
@@ -80,8 +89,7 @@ func RunAgent(imageTag string, localRepoPath string) error {
 			return fmt.Errorf("container waiting error: %w", err)
 		}
 	case <-statusCh:
-		fmt.Println("AI Agent finished execution.")
-
+		fmt.Println("Agent finished execution.")
 		_ = cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
 		return nil
 

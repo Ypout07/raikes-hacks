@@ -10,14 +10,12 @@ import (
 func RevertWorkspace(repoPath string) error {
 	fmt.Println("Reverting all AI modifications.")
 
-	// 1. Discard all modifications to tracked files
 	restoreCmd := exec.Command("git", "restore", ".")
 	restoreCmd.Dir = repoPath
 	if err := restoreCmd.Run(); err != nil {
 		return fmt.Errorf("git restore failed. Is the directory a git repository?: %w", err)
 	}
 
-	// 2. Delete any brand new, untracked files the AI might have hallucinated
 	cleanCmd := exec.Command("git", "clean", "-fd")
 	cleanCmd.Dir = repoPath
 	if err := cleanCmd.Run(); err != nil {
