@@ -1,23 +1,38 @@
 "use client";
 
-export default function Navbar() {
-  return (
-    <nav className="flex items-center justify-between px-6 py-3 border-b border-surface-hover flex-shrink-0">
-      <span className="text-sm text-muted">
-        Welcome back, <span className="text-white font-medium">Adam</span>
-      </span>
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-      <div className="flex items-center gap-1">
-        {["Learn", "Completed/Ongoing Challenges", "Profile", "About"].map(
-          (item) => (
-            <button
-              key={item}
-              className="px-4 py-2 text-sm text-muted hover:text-white transition-colors rounded hover:bg-surface-overlay"
-            >
-              {item}
-            </button>
-          )
-        )}
+const NAV_ITEMS = [
+  { label: "Get Started", href: "/get-started" },
+  { label: "Challenges", href: "/" },
+  { label: "Profile", href: "/" },
+  { label: "About", href: "/" },
+];
+
+export default function Navbar() {
+  const pathname = usePathname();
+
+  return (
+    <nav className="flex items-center justify-between px-8 h-12 bg-surface-hover/60 backdrop-blur-lg border-b border-surface-hover flex-shrink-0">
+      <Link href="/" className="text-sm text-muted hover:text-heading transition-colors">
+        Welcome back, <span className="text-heading font-semibold">Adam</span>
+      </Link>
+
+      <div className="flex items-center gap-0">
+        {NAV_ITEMS.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className={`px-4 py-1.5 text-xs transition-colors ${
+              pathname === item.href
+                ? "text-heading font-semibold"
+                : "text-body hover:text-heading"
+            }`}
+          >
+            {item.label}
+          </Link>
+        ))}
       </div>
     </nav>
   );

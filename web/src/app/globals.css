@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-surface text-white antialiased;
+    @apply bg-surface-overlay text-body antialiased;
   }
 }
 
@@ -16,4 +16,36 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Tutorial prose styling */
+.prose-custom h2 {
+  @apply text-2xl font-bold text-heading mt-10 mb-3;
+}
+.prose-custom h3 {
+  @apply text-lg font-semibold text-heading mt-8 mb-2;
+}
+.prose-custom h4 {
+  @apply text-base font-semibold text-heading mt-6 mb-2;
+}
+.prose-custom p {
+  @apply text-sm text-body leading-relaxed mb-4;
+}
+.prose-custom ul {
+  @apply list-disc pl-5 mb-4 space-y-1;
+}
+.prose-custom li {
+  @apply text-sm text-body leading-relaxed;
+}
+.prose-custom code {
+  @apply text-xs font-mono bg-surface-overlay text-heading px-1.5 py-0.5 rounded;
+}
+.prose-custom pre {
+  @apply bg-surface-overlay border border-surface-hover rounded-xl p-4 mb-4 overflow-x-auto;
+}
+.prose-custom pre code {
+  @apply bg-transparent p-0 text-xs leading-relaxed whitespace-pre;
+}
+.prose-custom strong {
+  @apply font-semibold text-heading;
 }
