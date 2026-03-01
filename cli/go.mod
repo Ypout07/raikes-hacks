@@ -2,11 +2,18 @@ module agent-cli
 
 go 1.25.5
 
-require github.com/docker/docker v28.5.2+incompatible
+require (
+	github.com/docker/docker v28.5.2+incompatible
+	github.com/spf13/cobra v1.10.2
+)
+
+require (
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
+)
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/Ypout07/bounty-bot v0.0.0-20260301005045-b4bb23bc030a
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
