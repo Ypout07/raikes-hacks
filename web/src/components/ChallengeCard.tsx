@@ -2,11 +2,8 @@
 
 import { Challenge, ChallengeStatus } from "@/lib/types";
 
-const statusConfig: Record<ChallengeStatus, { label: string; className: string }> = {
+const statusConfig: Partial<Record<ChallengeStatus, { label: string; className: string }>> = {
   submitted: { label: "Submitted", className: "bg-green-100 text-green-700" },
-  ongoing: { label: "Ongoing", className: "bg-amber-100 text-amber-700" },
-  unattempted: { label: "Unattempted", className: "bg-surface-overlay text-muted" },
-  expired: { label: "Expired", className: "bg-red-100 text-red-600" },
 };
 
 function formatPostedDate(iso: string): string {
@@ -14,18 +11,39 @@ function formatPostedDate(iso: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function getTimeRemaining(deadline: string): string {
-  const now = Date.now();
-  const end = new Date(deadline).getTime();
-  const diff = end - now;
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
-  if (diff <= 0) return "Ended";
+function formatDuration(startDate: string, deadline: string): string {
+  const diff = new Date(deadline).getTime() - new Date(startDate).getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (days >= 1) return `${days}d`;
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  return `${hours}h`;
+}
+
+function getTimeLabel(startDate: string, deadline: string): { text: string; subtext?: string; upcoming: boolean; ended: boolean } {
+  const now = Date.now();
+  const start = new Date(startDate).getTime();
+  const end = new Date(deadline).getTime();
+
+  if (now < start) {
+    const diff = start - now;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const beginsText = days > 0 ? `Begins in ${days}d ${hours}h` : `Begins in ${hours}h`;
+    const subtext = `Ends ${formatDate(deadline)} · ${formatDuration(startDate, deadline)}`;
+    return { text: beginsText, subtext, upcoming: true, ended: false };
+  }
+
+  const diff = end - now;
+  if (diff <= 0) return { text: "Ended", upcoming: false, ended: true };
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-  if (days > 0) return `${days}d ${hours}h left`;
-  return `${hours}h left`;
+  if (days > 0) return { text: `${days}d ${hours}h left`, upcoming: false, ended: false };
+  return { text: `${hours}h left`, upcoming: false, ended: false };
 }
 
 interface ChallengeCardProps {
@@ -74,23 +92,33 @@ export default function ChallengeCard({
 
         {/* Right: meta */}
         <div className="flex-shrink-0 flex items-center gap-3 text-xs text-muted whitespace-nowrap">
-          <span
-            className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusConfig[challenge.status].className}`}
-          >
-            {statusConfig[challenge.status].label}
-          </span>
+          {statusConfig[challenge.status] && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusConfig[challenge.status]!.className}`}
+            >
+              {statusConfig[challenge.status]!.label}
+            </span>
+          )}
           <span className="hidden sm:inline">
             {formatPostedDate(challenge.postedAt)}
           </span>
-          <span
-            className={`font-medium ${
-              getTimeRemaining(challenge.deadline) === "Ended"
-                ? "text-red-500"
-                : "text-accent"
-            }`}
-          >
-            {getTimeRemaining(challenge.deadline)}
-          </span>
+          {(() => {
+            const t = getTimeLabel(challenge.startDate, challenge.deadline);
+            return (
+              <div className="text-right">
+                <span
+                  className={`font-medium ${
+                    t.ended ? "text-red-500" : t.upcoming ? "text-muted" : "text-accent"
+                  }`}
+                >
+                  {t.text}
+                </span>
+                {t.subtext && (
+                  <p className="text-[10px] text-muted">{t.subtext}</p>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </button>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Highlight } from "prism-react-renderer";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 
 /* ── Template file contents embedded for client-side download ── */
@@ -429,6 +430,8 @@ function downloadAll() {
 
 export default function GetStartedPage() {
   const [previewFile, setPreviewFile] = useState<string | null>(null);
+  const [tabHovered, setTabHovered] = useState(false);
+  const router = useRouter();
   const previewed = TEMPLATE_FILES.find((f) => f.name === previewFile);
 
   return (
@@ -687,6 +690,51 @@ async def custom_tool(arg1: str, arg2: int):
               <code>agent.py</code>.
             </p>
           </article>
+        </div>
+      </div>
+
+      {/* Challenges side tab – full circle, center pinned to right edge */}
+      <div
+        onMouseEnter={() => setTabHovered(true)}
+        onMouseLeave={() => setTabHovered(false)}
+        onClick={() => router.push("/challenges")}
+        className={`fixed z-50 cursor-pointer rounded-full flex items-center transition-all duration-300 ease-out ${
+          tabHovered
+            ? "bg-blue-600 shadow-[-6px_0_24px_rgba(0,0,0,0.25)]"
+            : "bg-blue-500/30"
+        }`}
+        style={{
+          top: "3.5rem",
+          width: "calc(100vh - 3.5rem)",
+          height: "calc(100vh - 3.5rem)",
+          /* half the diameter off-screen so the midpoint sits on the edge */
+          right: tabHovered
+            ? "calc(-1 * (100vh - 3.5rem) / 2 - 180px)"
+            : "calc(-1 * (100vh - 3.5rem) / 2 - 240px)",
+        }}
+      >
+        <div className="pl-[calc(10%-60px)] flex flex-col items-start">
+          <span
+            className={`text-lg tracking-wide whitespace-nowrap transition-all duration-300 ${
+              tabHovered ? "font-bold text-white" : "font-semibold text-accent"
+            }`}
+          >
+            Challenges
+          </span>
+          <svg
+            viewBox="0 0 100 12"
+            className={`w-[7rem] h-3 mt-1 transition-all duration-300 ${
+              tabHovered ? "text-white" : "text-accent"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="0" y1="6" x2="90" y2="6" />
+            <polyline points="82,1 90,6 82,11" />
+          </svg>
         </div>
       </div>
     </main>

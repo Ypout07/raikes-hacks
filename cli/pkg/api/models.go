@@ -5,6 +5,7 @@ type PendingSubmissionResponse struct {
 	SubmissionID   string `json:"submission_id"`
 	DockerImageTag string `json:"docker_image_tag"`
 	Status         string `json:"status"`
+	APIKey         string `json:"api_key"`
 }
 
 // ExecutionMetrics defines the nested telemetry object.
