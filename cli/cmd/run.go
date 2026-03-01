@@ -13,64 +13,65 @@ import (
 )
 
 var (
-	problemID string
-	repoPath  string
+	runProblemID string
+	runRepoPath  string
 )
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "Pulls the next pending agent and executes the evaluation loop",
+	Short: "Pulls a specific pending agent and executes the evaluation loop",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Initializing orchestrator %s\n", problemID)
+		fmt.Println("=====================================================")
+		fmt.Printf("INITIALIZING SINGLE RUN FOR PROBLEM: %s\n", runProblemID)
+		fmt.Println("=====================================================")
 
-		job, err := api.FetchPendingJob(problemID)
+		job, err := api.FetchPendingJob(runProblemID)
 		if err != nil {
 			log.Fatalf("Aborting: %v\n", err)
 		}
-		fmt.Printf("Got submission ID: %s\n", job.SubmissionID)
+		fmt.Printf("Acquired Submission ID: %s\n", job.SubmissionID)
 
 		startTime := time.Now()
-
 		agentFailed := false
-		err = orchestrator.RunAgent(job.DockerImageTag, repoPath)
+
+		err = orchestrator.RunAgent(job.DockerImageTag, runRepoPath)
 		if err != nil {
-			fmt.Printf("Agent execution failed/timed out: %v\n", err)
+			fmt.Printf("Agent Execution Failed/Timed Out: %v\n", err)
 			agentFailed = true
 		}
 
-		// Calculate total execution time (we track this even if it timed out)
 		execTime := time.Since(startTime).Seconds()
 
 		var passedTests bool
 		var tokensUsed int
 
 		if agentFailed {
-			// If the container crashed or timed out, it automatically fails the tests
 			fmt.Println("Skipping tests due to agent failure.")
 			passedTests = false
-			tokensUsed = 0 // Should we charge for failed attempts?
+			tokensUsed = 0
 		} else {
-			// The agent finished properly, so we run pytest
-			passedTests = evaluator.ExecuteTests(repoPath)
-			metrics := evaluator.ParseMetrics(repoPath)
+			passedTests = evaluator.ExecuteTests(runRepoPath)
+			metrics := evaluator.ParseMetrics(runRepoPath)
 			tokensUsed = metrics.TokensUsed
 		}
 
 		err = api.SubmitResults(job.SubmissionID, passedTests, execTime, tokensUsed)
 		if err != nil {
-			log.Fatalf("Failed to submit results to database: %v\n", err)
+			log.Fatalf("Failed to submit results: %v\n", err)
 		}
 
-		fmt.Println("Execution complete.")
+		// Enterprise cleanup for the single run as well
+		_ = evaluator.RevertWorkspace(runRepoPath)
+
+		fmt.Println("=====================================================")
+		fmt.Println("EXECUTION COMPLETE.")
+		fmt.Println("=====================================================")
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(runCmd)
-
-	// Define the flags required for this command
-	runCmd.Flags().StringVarP(&problemID, "problem-id", "p", "", "The ID of the problem to fetch pending submissions for (required)")
-	runCmd.Flags().StringVarP(&repoPath, "repo-path", "r", "./execution-environment/company-private-repo", "Absolute or relative path to the private repository")
-
+	runCmd.Flags().StringVarP(&runProblemID, "problem-id", "p", "", "The ID of the problem (required)")
+	runCmd.Flags().StringVarP(&runRepoPath, "repo-path", "r", "./execution-environment/company-private-repo", "Path to private repo")
 	runCmd.MarkFlagRequired("problem-id")
 }
