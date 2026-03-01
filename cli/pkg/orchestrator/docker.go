@@ -1,1 +1,97 @@
 package orchestrator
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/client"
+)
+
+// RunAgent pulls the student's image, mounts the local private repo, and executes it.
+func RunAgent(imageTag string, localRepoPath string) error {
+	// Initialize the Docker client using environment variables (standard configuration)
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("failed to initialize Docker client: %w", err)
+	}
+	defer cli.Close()
+
+	// Create a base context
+	ctx := context.Background()
+
+	fmt.Printf("[Pulling image %s from Docker Hub.\n", imageTag)
+	reader, err := cli.ImagePull(ctx, imageTag, image.PullOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to pull image: %w", err)
+	}
+
+	io.Copy(os.Stdout, reader)
+	reader.Close()
+
+	// Resolve the absolute path of the local private repo for the volume mount
+	absRepoPath, err := filepath.Abs(localRepoPath)
+	if err != nil {
+		return fmt.Errorf("failed to resolve absolute path for volume mount: %w", err)
+	}
+
+	// config
+	hostConfig := &container.HostConfig{
+		Mounts: []mount.Mount{
+			{
+				Type:   mount.TypeBind,
+				Source: absRepoPath,
+				Target: "/workspace",
+			},
+		},
+		Resources: container.Resources{
+			Memory: 1024 * 1024 * 1024, // 1g
+		},
+	}
+
+	fmt.Println("Creating container.")
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: imageTag,
+		Tty:   false,
+	}, hostConfig, nil, nil, "")
+	if err != nil {
+		return fmt.Errorf("failed to create container: %w", err)
+	}
+
+	fmt.Println("Starting AI Agent.")
+	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
+		return fmt.Errorf("failed to start container: %w", err)
+	}
+
+	// agent has 3 mins!
+	timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+	defer cancel()
+
+	statusCh, errCh := cli.ContainerWait(timeoutCtx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("container waiting error: %w", err)
+		}
+	case <-statusCh:
+		fmt.Println("AI Agent finished execution.")
+
+		_ = cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
+		return nil
+
+	case <-timeoutCtx.Done():
+		// The agent hallucinated or hung. We kill it mercilessly.
+		fmt.Println("Agent execution timed out. Force killing container.")
+		_ = cli.ContainerKill(ctx, resp.ID, "SIGKILL")
+		_ = cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
+		return fmt.Errorf("agent execution exceeded 3 minute timeout")
+	}
+
+	return nil
+}
