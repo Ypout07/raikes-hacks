@@ -4,12 +4,15 @@ import { useState, useMemo } from "react";
 import { Challenge } from "@/lib/types";
 import ChallengeCard from "./ChallengeCard";
 
-type SortKey = "newest" | "deadline" | "company";
+type SortKey = "trending" | "deadline-soonest" | "deadline-latest" | "upcoming-soonest" | "upcoming-latest" | "alphabetical";
 
 const sortOptions: { key: SortKey; label: string }[] = [
-  { key: "newest", label: "Newest" },
-  { key: "deadline", label: "Deadline" },
-  { key: "company", label: "Company" },
+  { key: "trending", label: "Trending" },
+  { key: "deadline-soonest", label: "Deadline: Soonest" },
+  { key: "deadline-latest", label: "Deadline: Latest" },
+  { key: "upcoming-soonest", label: "Upcoming: Soonest" },
+  { key: "upcoming-latest", label: "Upcoming: Latest" },
+  { key: "alphabetical", label: "Alphabetical" },
 ];
 
 interface ChallengeListProps {
@@ -28,22 +31,40 @@ export default function ChallengeList({
   action,
 }: ChallengeListProps) {
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<SortKey>("newest");
+  const [sort, setSort] = useState<SortKey>("trending");
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    let list = challenges.filter(
-      (c) =>
+    const isUpcoming = sort === "upcoming-soonest" || sort === "upcoming-latest";
+    const isDeadline = sort === "deadline-soonest" || sort === "deadline-latest";
+    const now = Date.now();
+    let list = challenges.filter((c) => {
+      const matchesSearch =
         c.title.toLowerCase().includes(q) ||
-        c.company.toLowerCase().includes(q)
-    );
+        c.company.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+      if (isUpcoming) return new Date(c.startDate).getTime() > now;
+      if (isDeadline) return new Date(c.startDate).getTime() <= now;
+      return true;
+    });
 
     list.sort((a, b) => {
-      if (sort === "newest")
-        return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
-      if (sort === "deadline")
-        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-      return a.company.localeCompare(b.company);
+      let cmp = 0;
+      if (sort === "trending") {
+        cmp = b.submissionCount - a.submissionCount;
+      } else if (sort === "deadline-soonest") {
+        cmp = new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+      } else if (sort === "deadline-latest") {
+        cmp = new Date(b.deadline).getTime() - new Date(a.deadline).getTime();
+      } else if (sort === "upcoming-soonest") {
+        cmp = new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      } else if (sort === "upcoming-latest") {
+        cmp = new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+      } else if (sort === "alphabetical") {
+        return a.title.localeCompare(b.title);
+      }
+      // break ties alphabetically by title
+      return cmp !== 0 ? cmp : a.title.localeCompare(b.title);
     });
 
     return list;

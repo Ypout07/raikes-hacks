@@ -10,8 +10,10 @@ function toChallenge(row: Record<string, unknown>): Challenge {
     description: row.description as string,
     request: (row.request as string) ?? "",
     postedAt: row.posted_at as string,
+    startDate: row.start_date as string,
     deadline: row.deadline as string,
     status: row.status as Challenge["status"],
+    submissionCount: (row.submission_count as number) ?? 0,
   };
 }
 
@@ -63,6 +65,7 @@ export async function createChallenge(challenge: {
   company: string;
   description: string;
   request?: string;
+  startDate?: string;
   deadline: string;
   metrics?: string[];
   repoUrl?: string;
@@ -74,6 +77,7 @@ export async function createChallenge(challenge: {
       company: challenge.company,
       description: challenge.description,
       request: challenge.request ?? "",
+      start_date: challenge.startDate ?? new Date().toISOString(),
       deadline: challenge.deadline,
       metrics: challenge.metrics ?? [],
       repo_url: challenge.repoUrl ?? "",

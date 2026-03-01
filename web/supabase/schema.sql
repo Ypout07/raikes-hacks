@@ -35,7 +35,9 @@ create table challenges (
   description text not null,
   request text default '',
   posted_at timestamptz default now(),
+  start_date timestamptz not null default now(),
   deadline timestamptz not null,
+  submission_count integer not null default 0,
   status text not null default 'unattempted' check (status in ('submitted', 'ongoing', 'unattempted', 'expired')),
   -- provider-specific fields
   metrics text[] default '{}',
@@ -46,29 +48,28 @@ create table challenges (
 -- 3. SUBMISSIONS
 create table submissions (
   id uuid default gen_random_uuid() primary key,
-  challenge_id uuid references challenges(id) on delete cascade not null,
-  user_id uuid references profiles(id) on delete cascade not null,
-  repo_url text,
-  notes text,
-  score numeric,
-  status text not null default 'pending' check (status in ('pending', 'evaluating', 'completed', 'failed')),
-  submitted_at timestamptz default now()
+  created_at timestamptz default now(),
+  problem_id text not null,
+  docker_image_tag text not null,
+  status text not null default 'pending' check (status in ('pending', 'processing', 'completed', 'failed')),
+  passed_tests boolean default false,
+  execution_time_seconds double precision default 0.0,
+  tokens_used integer default 0
 );
 
--- 4. LEADERBOARD VIEW (auto-calculated)
+-- 4. LEADERBOARD VIEW (auto-calculated from submissions)
 create view leaderboard as
   select
-    p.id as user_id,
-    p.display_name,
-    p.email,
+    s.problem_id,
+    s.docker_image_tag,
     count(s.id) as total_submissions,
-    count(s.id) filter (where s.status = 'completed') as completed,
-    coalesce(sum(s.score), 0) as total_score
-  from profiles p
-  left join submissions s on s.user_id = p.id
-  where p.role = 'participant'
-  group by p.id, p.display_name, p.email
-  order by total_score desc;
+    count(s.id) filter (where s.passed_tests = true) as passed,
+    coalesce(avg(s.execution_time_seconds) filter (where s.status = 'completed'), 0) as avg_execution_time,
+    coalesce(avg(s.tokens_used) filter (where s.status = 'completed'), 0) as avg_tokens_used
+  from submissions s
+  where s.status = 'completed'
+  group by s.problem_id, s.docker_image_tag
+  order by passed desc, avg_execution_time asc;
 
 -- =============================================
 -- ROW LEVEL SECURITY POLICIES
@@ -100,16 +101,14 @@ create policy "Providers can update own challenges"
 -- Submissions
 alter table submissions enable row level security;
 
-create policy "Users can view own submissions"
-  on submissions for select using (auth.uid() = user_id);
+create policy "Anyone can view submissions"
+  on submissions for select using (true);
 
-create policy "Providers can view submissions to their challenges"
-  on submissions for select using (
-    exists (select 1 from challenges where id = challenge_id and created_by = auth.uid())
-  );
+create policy "Anyone can insert submissions"
+  on submissions for insert with check (true);
 
-create policy "Participants can submit"
-  on submissions for insert with check (auth.uid() = user_id);
+create policy "Service can update submissions"
+  on submissions for update using (true);
 
 -- =============================================
 -- INDEXES
@@ -118,5 +117,6 @@ create policy "Participants can submit"
 create index idx_challenges_company on challenges(company);
 create index idx_challenges_status on challenges(status);
 create index idx_challenges_deadline on challenges(deadline);
-create index idx_submissions_challenge on submissions(challenge_id);
-create index idx_submissions_user on submissions(user_id);
+create index idx_submissions_problem on submissions(problem_id);
+create index idx_submissions_status on submissions(status);
+create index idx_submissions_created on submissions(created_at);
