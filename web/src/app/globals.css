@@ -34,6 +34,9 @@
 .prose-custom ul {
   @apply list-disc pl-5 mb-4 space-y-1;
 }
+.prose-custom ol {
+  @apply list-decimal pl-5 mb-4 space-y-2;
+}
 .prose-custom li {
   @apply text-sm text-body leading-relaxed;
 }

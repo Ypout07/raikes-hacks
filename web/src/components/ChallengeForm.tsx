@@ -23,6 +23,7 @@ export default function ChallengeForm({ onSubmit }: ChallengeFormProps) {
       title: title.trim(),
       company: "Capital One",
       description: description.trim(),
+      request: "",
       status: "unattempted",
       postedAt: new Date().toISOString(),
       deadline: deadline ? new Date(deadline).toISOString() : new Date(Date.now() + 7 * 86400000).toISOString(),

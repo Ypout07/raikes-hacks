@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Challenge } from "@/lib/types";
 import { mockChallenges } from "@/lib/mockChallenges";
 import ChallengeList from "@/components/ChallengeList";
@@ -11,9 +13,12 @@ const trending = [...mockChallenges]
   .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
   .slice(0, 5);
 
+type Tab = "Request" | "Obfuscated Repository" | "Upload";
+
 export default function Home() {
   const [selected, setSelected] = useState<Challenge>(mockChallenges[0]);
   const [view, setView] = useState<"trending" | "library">("trending");
+  const [activeTab, setActiveTab] = useState<Tab>("Request");
 
   const library = useMemo(
     () => mockChallenges.filter((c) => c.status === "submitted" || c.status === "ongoing" || c.status === "expired"),
@@ -85,10 +90,15 @@ export default function Home() {
           {/* Tab bar */}
           <div className="px-6 border-b border-surface-hover flex-shrink-0 bg-surface-raised">
             <div className="flex gap-0">
-              {["Request", "Obfuscated Repository", "Upload"].map((tab) => (
+              {(["Request", "Obfuscated Repository", "Upload"] as Tab[]).map((tab) => (
                 <button
                   key={tab}
-                  className="px-5 py-3 text-sm font-medium text-muted hover:text-heading transition-colors border-b-2 border-transparent"
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
+                    activeTab === tab
+                      ? "text-heading border-heading"
+                      : "text-muted hover:text-heading border-transparent"
+                  }`}
                 >
                   {tab}
                 </button>
@@ -96,8 +106,16 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Tab content area (placeholder) */}
-          <div className="flex-1 min-h-0 p-6" />
+          {/* Tab content area */}
+          <div className="flex-1 min-h-0 p-6 overflow-y-auto">
+            {activeTab === "Request" && (
+              <article className="prose prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {selected.request}
+                </ReactMarkdown>
+              </article>
+            )}
+          </div>
         </div>
       </div>
     </main>

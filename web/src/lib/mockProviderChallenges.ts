@@ -7,6 +7,7 @@ export const mockProviderChallenges: ProviderChallenge[] = [
     company: "Capital One",
     description:
       "Design and implement a streaming data pipeline that detects fraudulent transactions in real time. You will work with synthetic transaction data and must flag anomalies using statistical or ML-based approaches within a 200ms latency window.",
+    request: "",
     postedAt: "2026-02-26T10:00:00Z",
     deadline: "2026-03-05T23:59:00Z",
     metrics: ["p95 latency", "accuracy", "false positive rate"],
@@ -20,6 +21,7 @@ export const mockProviderChallenges: ProviderChallenge[] = [
     company: "Capital One",
     description:
       "Optimize the provided credit risk scoring model to reduce inference time while maintaining AUC above 0.92. The model currently runs at 450ms per batch — target is sub-100ms without dropping below the accuracy threshold.",
+    request: "",
     postedAt: "2026-02-24T14:00:00Z",
     deadline: "2026-03-04T23:59:00Z",
     metrics: ["inference time", "AUC", "memory usage"],
@@ -33,6 +35,7 @@ export const mockProviderChallenges: ProviderChallenge[] = [
     company: "Capital One",
     description:
       "Audit and harden the provided API gateway configuration. Identify misconfigurations, implement rate limiting, add mTLS support, and ensure all OWASP API Top 10 vulnerabilities are mitigated.",
+    request: "",
     postedAt: "2026-02-27T08:00:00Z",
     deadline: "2026-03-07T18:00:00Z",
     metrics: ["vulnerabilities patched", "latency overhead", "test coverage"],
@@ -46,6 +49,7 @@ export const mockProviderChallenges: ProviderChallenge[] = [
     company: "Capital One",
     description:
       "Refactor the existing ETL pipeline to reduce AWS costs by at least 30%. The pipeline processes 2TB daily across S3, Glue, and Redshift. Maintain data freshness SLA of 15 minutes.",
+    request: "",
     postedAt: "2026-02-22T12:00:00Z",
     deadline: "2026-03-01T23:59:00Z",
     metrics: ["cost reduction %", "data freshness", "pipeline reliability"],

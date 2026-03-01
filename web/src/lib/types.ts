@@ -5,6 +5,7 @@ export interface Challenge {
   title: string;
   company: string;
   description: string;
+  request: string;
   postedAt: string;      // ISO date string
   deadline: string;       // ISO date string
   status: ChallengeStatus;
