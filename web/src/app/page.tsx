@@ -43,10 +43,8 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-surface-hover/30 to-surface-overlay pointer-events-none" />
-        <div className="relative max-w-3xl mx-auto px-8 pt-28 pb-20 text-center">
+      <section className="overflow-hidden">
+        <div className="max-w-3xl mx-auto px-8 pt-28 pb-20 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-accent mb-5">
             Raikes Center &middot; Spring 2026
           </p>
@@ -78,7 +76,7 @@ export default function LandingPage() {
       </section>
 
       {/* Company logos ticker */}
-      <section className="border-y border-surface-hover bg-white py-6">
+      <section className="border-y border-surface-hover bg-surface-hover/60 py-6">
         <div className="max-w-4xl mx-auto px-8">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted text-center mb-5">
             Challenges from industry leaders
