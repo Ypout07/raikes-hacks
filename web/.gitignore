@@ -1,0 +1,16 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+
+# environment variables
+.env
+.env.local
+.env*.local
+
+# vercel
+.vercel
+
+# misc
+.DS_Store

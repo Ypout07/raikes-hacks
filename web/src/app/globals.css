@@ -52,3 +52,12 @@
 .prose-custom strong {
   @apply font-semibold text-heading;
 }
+
+/* Override Tailwind prose inline code to show a box instead of bold */
+.prose code::before,
+.prose code::after {
+  content: none !important;
+}
+.prose :not(pre) > code {
+  @apply text-xs font-mono font-normal bg-surface-overlay text-heading px-1.5 py-0.5 rounded border border-surface-hover;
+}
