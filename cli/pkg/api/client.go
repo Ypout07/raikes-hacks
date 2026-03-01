@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,9 +11,11 @@ import (
 	"time"
 )
 
-// Enterprise configuration handling
-const defaultBaseURL = "http://localhost:3000" // Update this to your deployed Vercel URL before the demo
-const demoJudgeKey = "DEMO_BYPASS_KEY_123"     // Must match the key Person 1 hardcodes in Next.js
+// ErrQueueEmpty signals that the batch processor should terminate.
+var ErrQueueEmpty = errors.New("no pending submissions in the queue")
+
+const defaultBaseURL = "http://localhost:3000" // Update before demo
+const demoJudgeKey = "DEMO_BYPASS_KEY_123"
 
 func getBaseURL() string {
 	if url := os.Getenv("API_BASE_URL"); url != "" {
@@ -21,16 +24,24 @@ func getBaseURL() string {
 	return defaultBaseURL
 }
 
-// Global HTTP Client with a strict 10-second timeout. Never allow a hanging network call.
 var httpClient = &http.Client{
 	Timeout: 10 * time.Second,
 }
 
-// FetchPendingJob asks the Web Platform for the next student submission.
+// FetchNextJob is for the BATCH command. It asks for ANY pending job.
+func FetchNextJob() (*PendingSubmissionResponse, error) {
+	url := fmt.Sprintf("%s/api/submissions/pending", getBaseURL())
+	return fetchJobFromURL(url)
+}
+
+// FetchPendingJob is for the RUN command. It asks for a SPECIFIC problem.
 func FetchPendingJob(problemID string) (*PendingSubmissionResponse, error) {
 	url := fmt.Sprintf("%s/api/submissions/pending?problem_id=%s", getBaseURL(), problemID)
+	return fetchJobFromURL(url)
+}
 
-	fmt.Printf("[*] Querying Web Platform for pending jobs: %s\n", url)
+// Internal helper to keep the HTTP logic DRY (Don't Repeat Yourself)
+func fetchJobFromURL(url string) (*PendingSubmissionResponse, error) {
 	resp, err := httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("network error connecting to web platform: %w", err)
@@ -38,7 +49,7 @@ func FetchPendingJob(problemID string) (*PendingSubmissionResponse, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, fmt.Errorf("no pending submissions found in the queue")
+		return nil, ErrQueueEmpty
 	} else if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code from web platform: %d", resp.StatusCode)
 	}
@@ -57,7 +68,6 @@ func FetchPendingJob(problemID string) (*PendingSubmissionResponse, error) {
 func SubmitResults(submissionID string, passedTests bool, execTimeSeconds float64, tokens int) error {
 	url := fmt.Sprintf("%s/api/submissions/results", getBaseURL())
 
-	// Construct the exact payload Person 1 expects
 	payload := SubmitResultsRequest{
 		SubmissionID: submissionID,
 		JudgeAPIKey:  demoJudgeKey,
@@ -73,7 +83,6 @@ func SubmitResults(submissionID string, passedTests bool, execTimeSeconds float6
 		return fmt.Errorf("failed to marshal JSON payload: %w", err)
 	}
 
-	fmt.Println("[*] Transmitting execution metrics to database...")
 	resp, err := httpClient.Post(url, "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
 		return fmt.Errorf("network error during submission: %w", err)

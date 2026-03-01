@@ -113,7 +113,7 @@ def paginate(
         "per_page": per_page,
         "total": total,
         "total_pages": total_pages,
-        "has_next": page < total_pages,
+        "has_next": page <= total_pages,
         "has_prev": page > 1,
     }
 

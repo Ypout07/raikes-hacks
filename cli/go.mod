@@ -1,4 +1,4 @@
-module agent-cli
+module github.com/Ypout07/bounty-bot/cli
 
 go 1.25.5
 

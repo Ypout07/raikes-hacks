@@ -28,7 +28,7 @@ func ExecuteTests(repoPath string) bool {
 	}
 
 	// run tests w pytest?
-	cmd := exec.Command("pytest", "tests/")
+	cmd := exec.Command("python", "tests/test.py")
 	cmd.Dir = absRepoPath
 
 	var out bytes.Buffer
@@ -41,7 +41,7 @@ func ExecuteTests(repoPath string) bool {
 	if err != nil {
 		// ExitError means the command ran, but returned a non-zero exit code
 		if _, ok := err.(*exec.ExitError); ok {
-			fmt.Println("AI Agent failed to fix the bug.")
+			fmt.Println("One or more tests failed.")
 			fmt.Printf("Test Output:\n%s\n", out.String())
 			return false
 		}
