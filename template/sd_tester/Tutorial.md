@@ -30,19 +30,45 @@ pip install git+https://github.com/Creevo-App/creevo-agent-library.git python-do
 python agent.py
 ```
 
-## Example Usage
+## Creating an Agent
 
+Setup
+```python
+load_dotenv() #This loads all the variables found as environment
+api_key = os.getenv("GEMINI_API_KEY") #Gets your GEMINI_API_KEY
+llm = GeminiLLM(model="gemini-3-flash-preview", api_key=api_key, max_tokens=4096) #Here you pick the model you want to use and the max_tokens
+summarizer_llm = GeminiLLM(model="gemini-3-flash-preview", api_key=api_key, max_tokens=2048) #Here you have the model used for memory
+memory = FullCompressionMemory(summarizer_llm=summarizer_llm, max_tokens=50000) #Here you can change max tokens for memory
+
+
+#This is where you create your Agent
+agent = Agent(
+    llm=llm,
+    system_prompt=SYSTEM_PROMPT,
+    max_calls=10, #Can change the max calls the agent makes
+    max_tokens=4096, #Can change the max tokens it has
+    memory=memory,
+    agent_name="DebugBot", #Can change the name
+    tools=[StopTool(), get_file_structure_context, read_contents_of_file, execute_file, write_file] 
+)
 ```
-You: Run a test on this function
 
-# Agent will:
-# 1. Execute the test using available tools
-# 2. Process the results
-# 3. Provide detailed analysis
+Anaylzing this part of the code, StopTool() is always needed, the rest are tools available to you
+```
+tools=[StopTool(), get_file_structure_context, read_contents_of_file, execute_file, write_file]
+```
 
-You: Evaluate the performance metrics
+Now you can:
 
-You: Generate a test report
+1. Run a test on this function
+
+2. Evaluate the performance metrics
+
+3. Generate a test report
+
+```python
+result = agent.run("Find the main source code and run it. Look at the stacktrace and tell me what is the problem in simple terms")
+print(result.content)
 ```
 
 ## File Structure
@@ -94,22 +120,36 @@ agent = Agent(
 )
 ```
 
-### 4. Test Execution Framework
-
-The `test.py` module provides test discovery, execution, and result collection capabilities for comprehensive testing scenarios.
-
 ## Demo Tool
-
-*Space reserved for demonstrating custom tool functionality*
 
 ### Overview
 
-Add details about how to create and use a demo tool with this agent.
+Recreating a tool that reads files (a tool we made for you 😊).
 
 ### Example Implementation
 
 ```python
-# Implementation example coming soon
+@tool
+async def read_from_file(filepath: str):
+    """Description of what this tool does"""
+
+    """This tool allows the Agent to read from file"""
+
+    #Implementation
+    try:
+        with open(filepath, "r", encoding="utf-8") as file:
+            content_text = file.read()
+
+        #The data to return to the Agent
+        return {
+            "content": [{"type": "text", "text": content_text}],
+            "metadata": {"filepath": filepath, "char_count": len(content_text)}
+        }
+    except Exception as e:
+        return {
+            "content": [{"type": "text", "text": f"Error reading file: {str(e)}"}],
+            "metadata": {"filepath": filepath, "status": "failed"}
+        }
 ```
 
 ## Extending the Agent
