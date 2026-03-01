@@ -24,6 +24,8 @@ GUIDELINES_PROMPT = """
 
 5. **Dry Principle**: Look for opportunities to reduce redundancy, but avoid over-engineering.
 
+6. **Testing**: Use provided tests, don't use pytest or anything like that but the ones already given to you or ones you create that are similar to the ones provided.
+
 ## Communication Style
 
 - Use technical, precise language (e.g., "Race condition," "Null pointer," "O(n) complexity").
