@@ -13,10 +13,11 @@ const sortOptions: { key: SortKey; label: string }[] = [
 ];
 
 interface ChallengeListProps {
-  heading: string;
+  heading: React.ReactNode;
   challenges: Challenge[];
   selectedId: string | null;
   onSelect: (challenge: Challenge) => void;
+  action?: React.ReactNode;
 }
 
 export default function ChallengeList({
@@ -24,6 +25,7 @@ export default function ChallengeList({
   challenges,
   selectedId,
   onSelect,
+  action,
 }: ChallengeListProps) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
@@ -49,9 +51,16 @@ export default function ChallengeList({
 
   return (
     <div className="flex flex-col h-full">
-      <h2 className="text-sm font-medium uppercase tracking-wider text-muted mb-4">
-        {heading}
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        {typeof heading === "string" ? (
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
+            {heading}
+          </h2>
+        ) : (
+          heading
+        )}
+        {action}
+      </div>
 
       {/* Search bar */}
       <div className="relative mb-3">
@@ -73,20 +82,20 @@ export default function ChallengeList({
           placeholder="Search challenges..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-surface-overlay border border-surface-hover rounded-md py-2 pl-10 pr-4 text-sm text-white placeholder:text-muted focus:outline-none focus:border-accent transition-colors"
+          className="w-full bg-surface-overlay border border-surface-hover rounded-lg py-2 pl-10 pr-4 text-sm text-heading placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
         />
       </div>
 
       {/* Sort toggles */}
-      <div className="flex gap-1 mb-4">
+      <div className="flex gap-1.5 mb-4">
         {sortOptions.map((opt) => (
           <button
             key={opt.key}
             onClick={() => setSort(opt.key)}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
               sort === opt.key
-                ? "bg-accent text-surface"
-                : "bg-surface-overlay text-muted hover:text-white"
+                ? "bg-accent text-white"
+                : "bg-surface-overlay text-muted hover:text-heading"
             }`}
           >
             {opt.label}
@@ -95,7 +104,7 @@ export default function ChallengeList({
       </div>
 
       {/* Challenge cards */}
-      <div className="flex flex-col gap-2 flex-1 overflow-y-auto scrollbar-hide">
+      <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto scrollbar-hide">
         {filtered.length === 0 && (
           <p className="text-muted text-sm py-8 text-center">No challenges found.</p>
         )}

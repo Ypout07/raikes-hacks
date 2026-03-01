@@ -6,17 +6,19 @@ const config: Config = {
     extend: {
       colors: {
         surface: {
-          DEFAULT: "#0a0a0a",
-          raised: "#141414",
-          overlay: "#1a1a1a",
-          hover: "#222222",
+          DEFAULT: "#ffffff",
+          raised: "#fbfbfd",
+          overlay: "#f5f5f7",
+          hover: "#e8e8ed",
         },
         accent: {
-          DEFAULT: "#00d4aa",
-          dim: "#00a885",
-          glow: "#00f0c0",
+          DEFAULT: "#0071e3",
+          dim: "#0077ed",
+          glow: "#147ce5",
         },
-        muted: "#8a8a8a",
+        muted: "#86868b",
+        heading: "#1d1d1f",
+        body: "#424245",
       },
     },
   },

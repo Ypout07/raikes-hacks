@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-surface text-white antialiased;
+    @apply bg-surface-overlay text-body antialiased;
   }
 }
 

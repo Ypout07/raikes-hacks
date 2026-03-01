@@ -1,6 +1,13 @@
 "use client";
 
-import { Challenge } from "@/lib/types";
+import { Challenge, ChallengeStatus } from "@/lib/types";
+
+const statusConfig: Record<ChallengeStatus, { label: string; className: string }> = {
+  submitted: { label: "Submitted", className: "bg-green-100 text-green-700" },
+  ongoing: { label: "Ongoing", className: "bg-amber-100 text-amber-700" },
+  unattempted: { label: "Unattempted", className: "bg-surface-overlay text-muted" },
+  expired: { label: "Expired", className: "bg-red-100 text-red-600" },
+};
 
 function formatPostedDate(iso: string): string {
   const date = new Date(iso);
@@ -38,19 +45,19 @@ export default function ChallengeCard({
     <button
       onClick={() => onSelect(challenge)}
       className={`
-        group relative w-full rounded-md overflow-hidden flex
-        bg-surface-raised border transition-all duration-200 text-left
+        group relative w-full flex-shrink-0 rounded-xl overflow-hidden flex
+        transition-all duration-200 text-left
         ${
           isSelected
-            ? "border-accent shadow-[0_0_20px_rgba(0,212,170,0.15)]"
-            : "border-surface-hover hover:border-muted"
+            ? "bg-surface-overlay ring-1 ring-surface-hover shadow-sm"
+            : "bg-surface hover:bg-surface-overlay"
         }
       `}
     >
       {/* Accent left bar */}
       <div
-        className={`w-1 flex-shrink-0 transition-colors duration-200 ${
-          isSelected ? "bg-accent" : "bg-surface-hover group-hover:bg-muted"
+        className={`w-1 flex-shrink-0 rounded-l-xl transition-colors duration-200 ${
+          isSelected ? "bg-muted" : "bg-transparent group-hover:bg-surface-hover"
         }`}
       />
 
@@ -60,21 +67,26 @@ export default function ChallengeCard({
           <span className={`font-medium tracking-wide uppercase text-accent ${compact ? "text-[10px]" : "text-xs"}`}>
             {challenge.company}
           </span>
-          <h3 className={`font-semibold text-white leading-snug ${compact ? "text-sm" : "text-base"}`}>
+          <h3 className={`font-semibold text-heading leading-snug truncate ${compact ? "text-sm" : "text-base"}`}>
             {challenge.title}
           </h3>
         </div>
 
         {/* Right: meta */}
-        <div className="flex-shrink-0 flex items-center gap-4 text-xs text-muted">
+        <div className="flex-shrink-0 flex items-center gap-3 text-xs text-muted whitespace-nowrap">
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusConfig[challenge.status].className}`}
+          >
+            {statusConfig[challenge.status].label}
+          </span>
           <span className="hidden sm:inline">
             {formatPostedDate(challenge.postedAt)}
           </span>
           <span
             className={`font-medium ${
               getTimeRemaining(challenge.deadline) === "Ended"
-                ? "text-red-400"
-                : "text-accent-dim"
+                ? "text-red-500"
+                : "text-accent"
             }`}
           >
             {getTimeRemaining(challenge.deadline)}
