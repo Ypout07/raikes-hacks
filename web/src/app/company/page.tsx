@@ -1,17 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Challenge, ProviderChallenge } from "@/lib/types";
-import { mockProviderChallenges } from "@/lib/mockProviderChallenges";
+import { fetchProviderChallenges, createChallenge } from "@/lib/challenges";
 import ChallengeList from "@/components/ChallengeList";
 import ProviderNavbar from "@/components/ProviderNavbar";
 import ChallengeForm from "@/components/ChallengeForm";
 import ProviderChallengeDetail from "@/components/ProviderChallengeDetail";
 
 export default function CompanyPage() {
-  const [challenges, setChallenges] = useState<ProviderChallenge[]>(mockProviderChallenges);
+  const [challenges, setChallenges] = useState<ProviderChallenge[]>([]);
   const [selected, setSelected] = useState<ProviderChallenge | null>(null);
   const [showForm, setShowForm] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProviderChallenges().then((data) => {
+      setChallenges(data);
+      setLoading(false);
+    });
+  }, []);
 
   function handleSelect(challenge: Challenge) {
     const full = challenges.find((c) => c.id === challenge.id);
@@ -26,8 +34,20 @@ export default function CompanyPage() {
     setShowForm(true);
   }
 
-  function handleSubmit(newChallenge: ProviderChallenge) {
-    setChallenges((prev) => [newChallenge, ...prev]);
+  async function handleSubmit(newChallenge: ProviderChallenge) {
+    const saved = await createChallenge({
+      title: newChallenge.title,
+      company: newChallenge.company,
+      description: newChallenge.description,
+      request: newChallenge.request,
+      deadline: newChallenge.deadline,
+      metrics: newChallenge.metrics,
+      repoUrl: newChallenge.repoUrl,
+    });
+
+    if (saved) {
+      setChallenges((prev) => [saved, ...prev]);
+    }
     setShowForm(false);
   }
 
@@ -37,20 +57,26 @@ export default function CompanyPage() {
       <div className="flex flex-1 min-h-0 gap-px bg-surface-hover">
         {/* Left — Provider's challenges */}
         <div className="flex-1 min-w-0 p-6 min-h-0 bg-white">
-          <ChallengeList
-            heading="Your Challenges"
-            challenges={challenges}
-            selectedId={selected?.id ?? null}
-            onSelect={handleSelect}
-            action={
-              <button
-                onClick={handleNewChallenge}
-                className="px-3 py-1.5 text-xs font-medium rounded-full bg-accent text-white hover:bg-accent-dim transition-colors"
-              >
-                New Challenge
-              </button>
-            }
-          />
+          {loading ? (
+            <div className="flex items-center justify-center h-full text-muted text-sm">
+              Loading challenges...
+            </div>
+          ) : (
+            <ChallengeList
+              heading="Your Challenges"
+              challenges={challenges}
+              selectedId={selected?.id ?? null}
+              onSelect={handleSelect}
+              action={
+                <button
+                  onClick={handleNewChallenge}
+                  className="px-3 py-1.5 text-xs font-medium rounded-full bg-accent text-white hover:bg-accent-dim transition-colors"
+                >
+                  New Challenge
+                </button>
+              }
+            />
+          )}
         </div>
 
         {/* Right — Detail or Form */}
