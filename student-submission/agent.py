@@ -2,7 +2,7 @@ import os
 from CAL import Agent, GeminiLLM, StopTool, FullCompressionMemory, subagent
 from dotenv import load_dotenv
 from tools import get_file_structure_context, read_contents_of_file, execute_file, write_file
-from prompt import SYSTEM_PROMPT, SUBAGENT_PROMPT
+from prompt import SYSTEM_PROMPT, MRE_SUBAGENT_PROMPT, SE_SUBAGENT_PROMPT
 
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
@@ -11,7 +11,7 @@ summarizer_llm = GeminiLLM(model="gemini-3-flash-preview", api_key=api_key, max_
 memory = FullCompressionMemory(summarizer_llm=summarizer_llm, max_tokens=250000)
 
 @subagent(
-    system_prompt=SUBAGENT_PROMPT,
+    system_prompt=MRE_SUBAGENT_PROMPT,
     tools=[get_file_structure_context, read_contents_of_file, execute_file, write_file],
     llm=GeminiLLM(api_key=api_key, model="gemini-3-flash-preview", max_tokens=8192),
     max_calls=10,
@@ -20,15 +20,27 @@ memory = FullCompressionMemory(summarizer_llm=summarizer_llm, max_tokens=250000)
 async def minimal_reproducible_example():
     pass
 
+@subagent(
+    system_prompt=SE_SUBAGENT_PROMPT,
+    tools=[get_file_structure_context, read_contents_of_file, execute_file, write_file],
+    llm=GeminiLLM(api_key=api_key, model="gemini-3-flash-preview", max_tokens=8192),
+    max_calls=10,
+    max_tokens=16384,
+)
+async def side_effects():
+    pass
+
 
 agent = Agent(
     llm=llm,
     system_prompt=SYSTEM_PROMPT,
-    max_calls=30,
+    max_calls=50,
     max_tokens=32768,
     memory=memory,
     agent_name="DebugBot",
-    tools=[StopTool(), get_file_structure_context, read_contents_of_file, execute_file, write_file, minimal_reproducible_example]
+    tools=[StopTool(), get_file_structure_context, read_contents_of_file, 
+           execute_file, write_file, minimal_reproducible_example,
+           side_effects]
 )
 
 print("\n\nFirst prompt:\n")
