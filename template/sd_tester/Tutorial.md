@@ -15,13 +15,17 @@ A CAL agent example that demonstrates building a practical testing and evaluatio
 1. Create a `.env` file with your API keys:
 
 ```bash
-LLM_API_KEY=your_llm_api_key
+GEMINI_API_KEY="API_KEY_HERE"
 ```
 
 2. Install dependencies:
 
 ```bash
-pip install git+https://github.com/Creevo-App/creevo-agent-library.git python-dotenv
+py -m venv .venv
+```
+Run your virtual environment before you install dependencies
+```bash
+pip install -r .\sd_tester\requirements.txt
 ```
 
 3. Run the agent:
