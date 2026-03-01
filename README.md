@@ -1,1 +1,1 @@
-# Our RaikesHacks submission
+# Bounty Bot
